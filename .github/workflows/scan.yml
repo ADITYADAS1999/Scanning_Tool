@@ -39,7 +39,7 @@ jobs:
 
       # 6. Compile LaTeX Report
       - name: Compile LaTeX Report
-        uses: xu-cheng/latex-action@v3
+        uses: xu-cheng/latex-action@v4
         with:
           root_file: report_format.tex
 
