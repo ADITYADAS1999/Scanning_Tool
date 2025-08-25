@@ -39,13 +39,13 @@ jobs:
 
       # 6. Compile LaTeX Report
       - name: Compile LaTeX Report
-        uses: xu-cheng/latex-action@v4
+        uses: xu-cheng/latex-action@v3
         with:
           root_file: report_format.tex
 
       # 7. Upload Artifact
       - name: Upload PDF Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: docker-vulnerability-report
           path: report.pdf
