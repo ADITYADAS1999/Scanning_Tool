@@ -33,6 +33,18 @@ jobs:
       - name: Run Docker Scan
         run: trivy image --format json --output report.json my-custom-app:latest
 
+
+      # 4. Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      # 5. Install Python dependencies
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+        
+
       # 4. Convert JSON to LaTeX
       - name: Convert JSON to LaTeX
         run: python scripts/json_to_tex.py
