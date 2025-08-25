@@ -54,7 +54,7 @@ jobs:
         uses: xu-cheng/latex-action@v3
         with:
           root_file: report_format.tex
-          extra_system_packages: "texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra"
+          latexmk_use_xelatex: true
 
       # 9. Upload Artifact
       - name: Upload PDF Report
