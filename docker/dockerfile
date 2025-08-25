@@ -1,11 +1,6 @@
-# Simple vulnerable app (on purpose)
-FROM python:3.10-slim
+FROM python:3.7-slim   # instead of 3.10-slim
 
 WORKDIR /app
-
 COPY app/ /app
-
-# Install flask, but also some old/vulnerable libraries
-RUN pip install flask==1.0.2 requests==2.19.0 django==2.2.0
-
+RUN pip install flask==1.0.2 requests==2.19.1  # known vulnerable versions
 CMD ["python", "main.py"]
