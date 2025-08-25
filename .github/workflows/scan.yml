@@ -18,7 +18,6 @@ jobs:
         run: docker build -t my-custom-app:latest ./docker
 
       # 2. Install Trivy
-
       - name: Install Trivy
         run: |
           sudo apt-get update -y
@@ -28,11 +27,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y trivy
 
-
       # 3. Scan the image
       - name: Run Docker Scan
-        run: trivy image --format json --output report.json my-custom-app:latest
-
+        run: trivy image --ignore-unfixed --exit-code 0 --format json --output report.json my-custom-app:latest
 
       # 4. Set up Python
       - name: Set up Python
@@ -42,24 +39,24 @@ jobs:
 
       # 5. Install Python dependencies
       - name: Install Python dependencies
-        run: pip install -r requirements.txt
-        
+        run: pip install --upgrade pip && pip install -r requirements.txt
 
-      # 4. Convert JSON to LaTeX
+      # 6. Convert JSON to LaTeX
       - name: Convert JSON to LaTeX
         run: python scripts/json_to_tex.py
 
-      # 5. Generate severity charts
+      # 7. Generate severity charts
       - name: Generate Charts
         run: python scripts/gen_charts.py
 
-      # 6. Compile LaTeX Report
+      # 8. Compile LaTeX Report
       - name: Compile LaTeX Report
         uses: xu-cheng/latex-action@v3
         with:
           root_file: report_format.tex
+          extra_system_packages: "texlive-latex-extra texlive-fonts-recommended texlive-fonts-extra"
 
-      # 7. Upload Artifact
+      # 9. Upload Artifact
       - name: Upload PDF Report
         uses: actions/upload-artifact@v4
         with:
