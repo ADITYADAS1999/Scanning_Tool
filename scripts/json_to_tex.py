@@ -13,10 +13,12 @@ def latex_escape(text: str) -> str:
         "$": r"\$",
         "~": r"\textasciitilde{}",
         "^": r"\textasciicircum{}",
-        "\\": r"\textbackslash{}",
+        
     }
     for key, val in replacements.items():
         text = text.replace(key, val)
+    # Handle backslashes LAST to avoid breaking others
+    text = text.replace("\\", r"\textbackslash{}")
     return text
 
 with open("report.json") as f:
@@ -52,3 +54,4 @@ with open("report_content.tex", "w") as f:
         f.write("\\end{longtable}\n")
     else:
         f.write("No vulnerabilities were found in this scan. ✅\n")
+
