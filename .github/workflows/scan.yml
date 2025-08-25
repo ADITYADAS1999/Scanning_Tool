@@ -31,6 +31,13 @@ jobs:
       - name: Run Docker Scan
         run: trivy image --ignore-unfixed --exit-code 0 --format json --output report.json my-custom-app:latest
 
+      # 3.1 Debug JSON content
+      - name: Debug JSON Report
+        run: |
+          echo "=== report.json content ==="
+          cat report.json || echo "report.json is missing!"
+          echo "=== End of report.json ==="
+
       # 4. Set up Python
       - name: Set up Python
         uses: actions/setup-python@v4
