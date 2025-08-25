@@ -1,11 +1,22 @@
 import json
 
+def latex_escape(text: str) -> str:
+    if not text:
+        return ""
+    return (
+        text.replace("&", "\\&")
+            .replace("%", "\\%")
+            .replace("_", "\\_")
+            .replace("#", "\\#")
+            .replace("{", "\\{")
+            .replace("}", "\\}")
+    )
+
 with open("report.json") as f:
     data = json.load(f)
 
 summary = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
 
-# Count severities
 for result in data.get("Results", []):
     for vuln in result.get("Vulnerabilities", []):
         sev = vuln.get("Severity", "UNKNOWN")
@@ -22,14 +33,14 @@ with open("report_content.tex", "w") as f:
 
     f.write("\\section*{Vulnerability Details}\n")
     if any(summary.values()):
-        f.write("\\begin{longtable}{|p{3cm}|p{3cm}|p{2cm}|p{6cm}|}\n\\hline\n")
+        f.write("\\begin{longtable}{|p{3cm}|p{3cm}|p{2cm}|p{7cm}|}\n\\hline\n")
         f.write("Package & Vulnerability ID & Severity & Title \\\\\n\\hline\n")
         for result in data.get("Results", []):
             for vuln in result.get("Vulnerabilities", []):
-                pkg = vuln.get("PkgName") or vuln.get("PkgID") or vuln.get("PkgPath", "N/A")
+                pkg = vuln.get("PkgName") or vuln.get("PkgID") or "N/A"
                 vid = vuln.get("VulnerabilityID", "N/A")
                 sev = vuln.get("Severity", "N/A")
-                title = vuln.get("Title", "No title available").replace("&", "\\&")
+                title = latex_escape(vuln.get("Title", "No title available"))
                 f.write(f"{pkg} & {vid} & {sev} & {title} \\\\\n\\hline\n")
         f.write("\\end{longtable}\n")
     else:
