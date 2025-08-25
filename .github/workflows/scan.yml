@@ -1,0 +1,51 @@
+name: Docker Vulnerability Report
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+
+      # 1. Build your custom Docker image
+      - name: Build Docker Image
+        run: docker build -t my-custom-app:latest ./docker
+
+      # 2. Install Trivy
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget
+          wget https://github.com/aquasecurity/trivy/releases/latest/download/trivy_0.52.2_Linux-64bit.deb
+          sudo dpkg -i trivy_0.52.2_Linux-64bit.deb
+
+      # 3. Scan the image
+      - name: Run Docker Scan
+        run: trivy image --format json --output report.json my-custom-app:latest
+
+      # 4. Convert JSON to LaTeX
+      - name: Convert JSON to LaTeX
+        run: python scripts/json_to_tex.py
+
+      # 5. Generate severity charts
+      - name: Generate Charts
+        run: python scripts/gen_charts.py
+
+      # 6. Compile LaTeX Report
+      - name: Compile LaTeX Report
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: report_format.tex
+
+      # 7. Upload Artifact
+      - name: Upload PDF Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: docker-vulnerability-report
+          path: report.pdf
