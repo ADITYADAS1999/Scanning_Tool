@@ -3,14 +3,21 @@ import json
 def latex_escape(text: str) -> str:
     if not text:
         return ""
-    return (
-        text.replace("&", "\\&")
-            .replace("%", "\\%")
-            .replace("_", "\\_")
-            .replace("#", "\\#")
-            .replace("{", "\\{")
-            .replace("}", "\\}")
-    )
+    replacements = {
+        "&": r"\&",
+        "%": r"\%",
+        "_": r"\_",
+        "#": r"\#",
+        "{": r"\{",
+        "}": r"\}",
+        "$": r"\$",
+        "~": r"\textasciitilde{}",
+        "^": r"\textasciicircum{}",
+        "\\": r"\textbackslash{}",
+    }
+    for key, val in replacements.items():
+        text = text.replace(key, val)
+    return text
 
 with open("report.json") as f:
     data = json.load(f)
@@ -37,9 +44,9 @@ with open("report_content.tex", "w") as f:
         f.write("Package & Vulnerability ID & Severity & Title \\\\\n\\hline\n")
         for result in data.get("Results", []):
             for vuln in result.get("Vulnerabilities", []):
-                pkg = vuln.get("PkgName") or vuln.get("PkgID") or "N/A"
-                vid = vuln.get("VulnerabilityID", "N/A")
-                sev = vuln.get("Severity", "N/A")
+                pkg = latex_escape(vuln.get("PkgName") or vuln.get("PkgID") or "N/A")
+                vid = latex_escape(vuln.get("VulnerabilityID", "N/A"))
+                sev = latex_escape(vuln.get("Severity", "N/A"))
                 title = latex_escape(vuln.get("Title", "No title available"))
                 f.write(f"{pkg} & {vid} & {sev} & {title} \\\\\n\\hline\n")
         f.write("\\end{longtable}\n")
