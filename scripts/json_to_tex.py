@@ -1,14 +1,18 @@
 import json
 import re
 
-def latex_escape(text: str) -> str:
+def latex_escape(text: str, max_len: int = 200) -> str:
+    """Escape LaTeX special chars safely and truncate if too long."""
     if not text:
-        return ""
+        return "N/A"
 
-    # Escape backslashes first to avoid interfering with other escapes
+    # Normalize whitespace
+    text = text.replace("\n", " ").replace("\r", " ").replace("\t", " ")
+
+    # Escape backslashes first
     text = re.sub(r'\\', r'\\textbackslash{}', text)
 
-    # Then escape LaTeX special chars
+    # Escape LaTeX special characters
     replacements = {
         "&": r"\&",
         "%": r"\%",
@@ -23,15 +27,17 @@ def latex_escape(text: str) -> str:
     for key, val in replacements.items():
         text = text.replace(key, val)
 
+    # Truncate very long descriptions to avoid TeX buffer overflow
+    if len(text) > max_len:
+        text = text[:max_len] + "..."
+
     return text
 
 
 def main():
-    # Load JSON scan report
     with open("report.json") as f:
         data = json.load(f)
 
-    # Count vulnerabilities by severity
     summary = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
 
     for result in data.get("Results", []):
@@ -40,7 +46,6 @@ def main():
             if sev in summary:
                 summary[sev] += 1
 
-    # Generate LaTeX content
     with open("report_content.tex", "w") as f:
         f.write("% Auto-generated vulnerability content\n")
         f.write("\\section*{Summary}\n")
@@ -58,11 +63,11 @@ def main():
 
             for result in data.get("Results", []):
                 for vuln in result.get("Vulnerabilities", []):
-                    pkg = vuln.get("PkgName") or vuln.get("PkgID") or "N/A"
-                    vid = vuln.get("VulnerabilityID", "N/A")
-                    sev = vuln.get("Severity", "N/A")
+                    pkg = latex_escape(vuln.get("PkgName") or vuln.get("PkgID") or "N/A")
+                    vid = latex_escape(vuln.get("VulnerabilityID", "N/A"))
+                    sev = latex_escape(vuln.get("Severity", "N/A"))
                     title = latex_escape(vuln.get("Title", "No title available"))
-                    desc = latex_escape(vuln.get("Description", "No description available"))
+                    desc = latex_escape(vuln.get("Description", "No description available"), max_len=400)
 
                     f.write(f"{pkg} & {vid} & {sev} & {title} & {desc} \\\\\n\\hline\n")
 
