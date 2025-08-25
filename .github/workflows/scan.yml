@@ -63,6 +63,12 @@ jobs:
           root_file: report_format.tex
           latexmk_use_xelatex: true
 
+
+      # 8.1 Debug LaTeX log (new step)
+      - name: Debug LaTeX log
+        if: failure()   # only runs if LaTeX step fails
+        run: cat report_format.log
+
       # 9. Upload Artifact
       - name: Upload PDF Report
         uses: actions/upload-artifact@v4
