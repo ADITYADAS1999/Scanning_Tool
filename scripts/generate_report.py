@@ -11,6 +11,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 import matplotlib.pyplot as plt
 import json
+from PyPDF2 import PdfMerger
 
 
 def generate_charts(summary):
@@ -43,7 +44,8 @@ def generate_charts(summary):
     plt.close()
 
 
-def generate_report():
+def build_report():
+    """Generate vulnerability report (without cover page)."""
     # Load JSON scan results
     with open("report.json") as f:
         data = json.load(f)
@@ -109,5 +111,19 @@ def generate_report():
     doc.build(elements)
 
 
+def merge_pdfs(front_page, report, output):
+    """Merge cover page and report into final PDF."""
+    merger = PdfMerger()
+    merger.append(front_page)
+    merger.append(report)
+    merger.write(output)
+    merger.close()
+
+
 if __name__ == "__main__":
-    generate_report()
+    # Step 1: Build vulnerability report
+    build_report()
+
+    # Step 2: Merge with front-page template (report_format.pdf)
+    merge_pdfs("report_format.pdf", "report.pdf", "final_report.pdf")
+    print("✅ Final report generated: final_report.pdf")
