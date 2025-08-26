@@ -13,7 +13,7 @@ jobs:
       - name: Checkout Repo
         uses: actions/checkout@v3
 
-      # 1. Build your custom Docker image
+      # 1. Build Docker image
       - name: Build Docker Image
         run: docker build -t my-custom-app:latest ./docker
 
@@ -27,16 +27,9 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y trivy
 
-      # 3. Scan the image
+      # 3. Run Docker Scan → JSON report
       - name: Run Docker Scan
         run: trivy image --ignore-unfixed --exit-code 0 --format json --output report.json my-custom-app:latest
-
-      # 3.1 Debug JSON content
-      - name: Debug JSON Report
-        run: |
-          echo "=== report.json content ==="
-          cat report.json || echo "report.json is missing!"
-          echo "=== End of report.json ==="
 
       # 4. Set up Python
       - name: Set up Python
@@ -46,30 +39,17 @@ jobs:
 
       # 5. Install Python dependencies
       - name: Install Python dependencies
-        run: pip install --upgrade pip && pip install -r requirements.txt
+        run: pip install -r requirements.txt
 
-      # 6. Convert JSON to LaTeX
-      - name: Convert JSON to LaTeX
-        run: python scripts/json_to_tex.py
-
-      # 7. Generate severity charts
+      # 6. Generate Charts (Optional)
       - name: Generate Charts
         run: python scripts/gen_charts.py
 
-      # 8. Compile LaTeX Report
-      - name: Compile LaTeX Report
-        uses: xu-cheng/latex-action@v3
-        with:
-          root_file: report_format.tex
-          latexmk_use_xelatex: true
+      # 7. Generate PDF Report
+      - name: Generate PDF Report
+        run: python scripts/generate_report.py
 
-
-      # 8.1 Debug LaTeX log (new step)
-      - name: Debug LaTeX log
-        if: failure()   # only runs if LaTeX step fails
-        run: cat report_format.log
-
-      # 9. Upload Artifact
+      # 8. Upload Artifact
       - name: Upload PDF Report
         uses: actions/upload-artifact@v4
         with:
