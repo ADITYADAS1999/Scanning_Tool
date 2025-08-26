@@ -8,11 +8,10 @@ from reportlab.platypus import (
     Image,
 )
 from reportlab.lib import colors
-#from pypdf import PdfMerger
 from reportlab.lib.styles import getSampleStyleSheet
 import matplotlib.pyplot as plt
 import json
-from PyPDF2 import PdfMerger
+from pypdf import PdfMerger   # ✅ modern replacement for PyPDF2
 
 
 def generate_charts(summary):
@@ -45,13 +44,13 @@ def generate_charts(summary):
     plt.close()
 
 
-def build_report():
-    """Generate vulnerability report (without cover page)."""
+def generate_report():
     # Load JSON scan results
     with open("report.json") as f:
         data = json.load(f)
 
-    doc = SimpleDocTemplate("report.pdf", pagesize=A4)
+    # First build the "content-only" report
+    doc = SimpleDocTemplate("report_content.pdf", pagesize=A4)
     elements = []
     styles = getSampleStyleSheet()
 
@@ -108,23 +107,16 @@ def build_report():
     )
     elements.append(table)
 
-    # Build PDF
+    # Build the content-only PDF
     doc.build(elements)
 
-
-def merge_pdfs(front_page, report, output):
-    """Merge cover page and report into final PDF."""
+    # ✅ Merge with front-page template
     merger = PdfMerger()
-    merger.append(front_page)
-    merger.append(report)
-    merger.write(output)
+    merger.append("report_format.pdf")   # <-- your designed cover page
+    merger.append("report_content.pdf")  # <-- generated content
+    merger.write("report.pdf")           # final merged file
     merger.close()
 
 
 if __name__ == "__main__":
-    # Step 1: Build vulnerability report
-    build_report()
-
-    # Step 2: Merge with front-page template (report_format.pdf)
-    merge_pdfs("report_format.pdf", "report.pdf", "final_report.pdf")
-    print("✅ Final report generated: final_report.pdf")
+    generate_report()
