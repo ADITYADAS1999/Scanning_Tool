@@ -11,7 +11,7 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 import matplotlib.pyplot as plt
 import json
-from PyPDF2 import PdfMerger
+from PyPDF import PdfMerger
 
 
 def generate_charts(summary):
