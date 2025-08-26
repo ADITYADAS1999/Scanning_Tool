@@ -39,7 +39,10 @@ jobs:
 
       # 5. Install Python dependencies
       - name: Install Python dependencies
-        run: pip install -r requirements.txt
+        run: |
+          pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pypdf==6.0.0
 
       # 6. Generate Charts (Optional)
       - name: Generate Charts
