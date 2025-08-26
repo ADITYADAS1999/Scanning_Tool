@@ -11,7 +11,14 @@ from reportlab.lib import colors
 from reportlab.lib.styles import getSampleStyleSheet
 import matplotlib.pyplot as plt
 import json
-from pyPDF2 import PdfMerger   # ✅ modern replacement for PyPDF2
+
+# ✅ Try importing PyPDF2 (for PdfMerger), fallback to pypdf
+try:
+    from PyPDF2 import PdfMerger
+    USE_PYPDF2 = True
+except ImportError:
+    from pypdf import PdfWriter
+    USE_PYPDF2 = False
 
 
 def generate_charts(summary):
@@ -42,6 +49,22 @@ def generate_charts(summary):
     plt.tight_layout()
     plt.savefig("pie_chart.png")
     plt.close()
+
+
+def merge_pdfs(front_page, report, output):
+    """Merge two PDFs into one final report."""
+    if USE_PYPDF2:
+        merger = PdfMerger()
+        merger.append(front_page)
+        merger.append(report)
+        merger.write(output)
+        merger.close()
+    else:
+        writer = PdfWriter()
+        writer.append(front_page)
+        writer.append(report)
+        with open(output, "wb") as f:
+            writer.write(f)
 
 
 def generate_report():
@@ -111,11 +134,7 @@ def generate_report():
     doc.build(elements)
 
     # ✅ Merge with front-page template
-    merger = PdfMerger()
-    merger.append("report_format.pdf")   # <-- your designed cover page
-    merger.append("report_content.pdf")  # <-- generated content
-    merger.write("report.pdf")           # final merged file
-    merger.close()
+    merge_pdfs("report_format.pdf", "report_content.pdf", "report.pdf")
 
 
 if __name__ == "__main__":
