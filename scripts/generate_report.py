@@ -1,21 +1,61 @@
 from reportlab.lib.pagesizes import A4
-from reportlab.pdfgen import canvas
+from reportlab.platypus import (
+    SimpleDocTemplate,
+    Table,
+    TableStyle,
+    Paragraph,
+    Spacer,
+    Image,
+)
+from reportlab.lib import colors
+from reportlab.lib.styles import getSampleStyleSheet
+import matplotlib.pyplot as plt
 import json
+
+
+def generate_charts(summary):
+    """Generate bar and pie charts for severity summary."""
+    severities = list(summary.keys())
+    counts = list(summary.values())
+
+    # --- Bar Chart ---
+    plt.figure(figsize=(5, 3))
+    plt.bar(severities, counts, color=["red", "orange", "gold", "green"])
+    plt.title("Vulnerabilities by Severity (Bar Chart)")
+    plt.xlabel("Severity")
+    plt.ylabel("Count")
+    plt.tight_layout()
+    plt.savefig("bar_chart.png")
+    plt.close()
+
+    # --- Pie Chart ---
+    plt.figure(figsize=(4, 4))
+    plt.pie(
+        counts,
+        labels=severities,
+        autopct="%1.1f%%",
+        colors=["red", "orange", "gold", "green"],
+        startangle=140,
+    )
+    plt.title("Vulnerabilities by Severity (Pie Chart)")
+    plt.tight_layout()
+    plt.savefig("pie_chart.png")
+    plt.close()
+
 
 def generate_report():
     # Load JSON scan results
     with open("report.json") as f:
         data = json.load(f)
 
-    c = canvas.Canvas("report.pdf", pagesize=A4)
-    width, height = A4
+    doc = SimpleDocTemplate("report.pdf", pagesize=A4)
+    elements = []
+    styles = getSampleStyleSheet()
 
     # Title
-    c.setFont("Helvetica-Bold", 18)
-    c.drawString(100, height - 50, "Docker Vulnerability Scan Report")
-
-    c.setFont("Helvetica", 12)
-    c.drawString(100, height - 80, "Generated from Trivy JSON results")
+    title = Paragraph("<b>Docker Vulnerability Scan Report</b>", styles["Title"])
+    subtitle = Paragraph("Generated from Trivy JSON results", styles["Normal"])
+    elements.extend([title, subtitle, Spacer(1, 20)])
 
     # Summary counts
     summary = {"CRITICAL": 0, "HIGH": 0, "MEDIUM": 0, "LOW": 0}
@@ -25,35 +65,49 @@ def generate_report():
             if sev in summary:
                 summary[sev] += 1
 
-    y = height - 120
-    c.setFont("Helvetica-Bold", 14)
-    c.drawString(100, y, "Severity Summary:")
-    y -= 20
-    c.setFont("Helvetica", 12)
+    elements.append(Paragraph("<b>Severity Summary:</b>", styles["Heading2"]))
     for sev, count in summary.items():
-        c.drawString(120, y, f"{sev}: {count}")
-        y -= 20
+        elements.append(Paragraph(f"{sev}: {count}", styles["Normal"]))
+    elements.append(Spacer(1, 20))
 
-    # Vulnerability details
-    y -= 20
-    c.setFont("Helvetica-Bold", 14)
-    c.drawString(100, y, "Vulnerability Details:")
-    y -= 20
+    # Generate and add charts
+    generate_charts(summary)
+    elements.append(Image("bar_chart.png", width=350, height=200))
+    elements.append(Spacer(1, 20))
+    elements.append(Image("pie_chart.png", width=300, height=300))
+    elements.append(Spacer(1, 30))
 
-    c.setFont("Helvetica", 10)
+    # Vulnerability details table
+    elements.append(Paragraph("<b>Vulnerability Details:</b>", styles["Heading2"]))
+
+    table_data = [["Package", "Vulnerability ID", "Severity", "Title"]]
     for result in data.get("Results", []):
         for vuln in result.get("Vulnerabilities", []):
             pkg = vuln.get("PkgName", "N/A")
             vid = vuln.get("VulnerabilityID", "N/A")
             sev = vuln.get("Severity", "N/A")
             title = vuln.get("Title", "N/A")
-            c.drawString(100, y, f"{pkg} | {vid} | {sev} | {title[:60]}")
-            y -= 12
-            if y < 50:  # page break
-                c.showPage()
-                y = height - 50
+            table_data.append([pkg, vid, sev, title])
 
-    c.save()
+    table = Table(table_data, colWidths=[100, 120, 60, 200])
+    table.setStyle(
+        TableStyle(
+            [
+                ("BACKGROUND", (0, 0), (-1, 0), colors.HexColor("#cccccc")),
+                ("TEXTCOLOR", (0, 0), (-1, 0), colors.black),
+                ("ALIGN", (0, 0), (-1, -1), "LEFT"),
+                ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                ("FONTSIZE", (0, 0), (-1, -1), 8),
+                ("BOTTOMPADDING", (0, 0), (-1, 0), 8),
+                ("GRID", (0, 0), (-1, -1), 0.5, colors.grey),
+            ]
+        )
+    )
+    elements.append(table)
+
+    # Build PDF
+    doc.build(elements)
+
 
 if __name__ == "__main__":
     generate_report()
