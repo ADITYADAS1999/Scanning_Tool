@@ -42,7 +42,7 @@ jobs:
         run: |
           pip install --upgrade pip
           pip install -r requirements.txt
-          pip install pypdf==6.0.0
+          pip install PyPDF2==3.0.1
 
       # 6. Generate Charts (Optional)
       - name: Generate Charts
