@@ -8,10 +8,10 @@ from reportlab.platypus import (
     Image,
 )
 from reportlab.lib import colors
+from pypdf import PdfMerger
 from reportlab.lib.styles import getSampleStyleSheet
 import matplotlib.pyplot as plt
 import json
-from pypdf import PdfMerger
 #from PyPDF2 import PdfMerger
 
 
